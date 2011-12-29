@@ -1,5 +1,4 @@
-/* Copyright (c) 2011, Code Aurora Forum. All rights reserved.
- * Copyright (C) 2011 Sony Ericsson Mobile Communications AB.
+/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -335,6 +334,115 @@ void mdp4_overlay_dtv_vsync_push(struct msm_fb_data_type *mfd,
 		return;
 
 	mdp4_overlay_dtv_wait4vsync(mfd);
+
+	/* change mdp clk while mdp is idle` */
+	mdp4_set_perf_level();
+}
+
+static void mdp4_overlay_dtv_alloc_pipe(struct msm_fb_data_type *mfd,
+		int32 ptype)
+{
+	int ret = 0;
+	struct fb_info *fbi = mfd->fbi;
+	struct mdp4_overlay_pipe *pipe;
+
+	if (dtv_pipe != NULL)
+		return;
+
+	pr_debug("%s: ptype=%d\n", __func__, ptype);
+
+	pipe = mdp4_overlay_pipe_alloc(ptype, MDP4_MIXER1);
+	if (pipe == NULL) {
+		pr_err("%s: pipe_alloc failed\n", __func__);
+		return;
+	}
+	pipe->pipe_used++;
+	pipe->mixer_stage = MDP4_MIXER_STAGE_BASE;
+	pipe->mixer_num = MDP4_MIXER1;
+
+	if (ptype == OVERLAY_TYPE_BF) {
+		mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_ON, FALSE);
+		/* LSP_BORDER_COLOR */
+		MDP_OUTP(MDP_BASE + MDP4_OVERLAYPROC1_BASE + 0x5004,
+			((0x0 & 0xFFF) << 16) |	/* 12-bit B */
+			(0x0 & 0xFFF));		/* 12-bit G */
+		/* MSP_BORDER_COLOR */
+		MDP_OUTP(MDP_BASE + MDP4_OVERLAYPROC1_BASE + 0x5008,
+			(0x0 & 0xFFF));		/* 12-bit R */
+		mdp_pipe_ctrl(MDP_OVERLAY1_BLOCK, MDP_BLOCK_POWER_OFF, FALSE);
+	} else {
+		switch (mfd->ibuf.bpp) {
+		case 2:
+			pipe->src_format = MDP_RGB_565;
+			break;
+		case 3:
+			pipe->src_format = MDP_RGB_888;
+			break;
+		case 4:
+		default:
+#ifdef CONFIG_FB_MSM_HDMI_AS_PRIMARY
+			pipe->src_format = MSMFB_DEFAULT_TYPE;
+#else
+			pipe->src_format = MDP_ARGB_8888;
+#endif
+			break;
+		}
+	}
+
+	pipe->src_height = fbi->var.yres;
+	pipe->src_width = fbi->var.xres;
+	pipe->src_h = fbi->var.yres;
+	pipe->src_w = fbi->var.xres;
+	pipe->src_y = 0;
+	pipe->src_x = 0;
+	pipe->srcp0_ystride = fbi->fix.line_length;
+
+	ret = mdp4_overlay_format2pipe(pipe);
+	if (ret < 0)
+		pr_warn("%s: format2type failed\n", __func__);
+
+	mdp4_overlay_dmae_xy(pipe);	/* dma_e */
+	mdp4_overlayproc_cfg(pipe);
+	mdp4_mixer_stage_up(pipe);
+
+	dtv_pipe = pipe; /* keep it */
+}
+
+int mdp4_overlay_dtv_set(struct msm_fb_data_type *mfd,
+			struct mdp4_overlay_pipe *pipe)
+{
+	if (dtv_pipe != NULL)
+		return 0;
+
+	if (pipe != NULL && pipe->mixer_stage == MDP4_MIXER_STAGE_BASE &&
+			pipe->pipe_type == OVERLAY_TYPE_RGB)
+		dtv_pipe = pipe; /* keep it */
+	else if (mdp4_overlay_borderfill_supported())
+		mdp4_overlay_dtv_alloc_pipe(mfd, OVERLAY_TYPE_BF);
+	else
+		mdp4_overlay_dtv_alloc_pipe(mfd, OVERLAY_TYPE_RGB);
+	if (dtv_pipe == NULL)
+		return -ENODEV;
+	return mdp4_dtv_start(mfd);
+}
+
+int mdp4_overlay_dtv_unset(struct msm_fb_data_type *mfd,
+			struct mdp4_overlay_pipe *pipe)
+{
+	unsigned int flags;
+	int result = 0;
+
+	flags = pipe->flags;
+	pipe->flags &= ~MDP_OV_PLAY_NOWAIT;
+	mdp4_overlay_dtv_vsync_push(mfd, pipe);
+	pipe->flags = flags;
+
+	if (pipe->mixer_stage == MDP4_MIXER_STAGE_BASE &&
+			pipe->pipe_type == OVERLAY_TYPE_RGB) {
+		result = mdp4_dtv_stop(mfd);
+		dtv_pipe = NULL;
+	}
+	return result;
 }
 
 static void mdp4_overlay_dtv_ov_start(struct msm_fb_data_type *mfd)
