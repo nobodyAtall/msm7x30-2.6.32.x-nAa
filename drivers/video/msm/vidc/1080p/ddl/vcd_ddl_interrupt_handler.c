@@ -476,23 +476,13 @@ static void ddl_encoder_frame_run_callback(
 					encoder->client_output_buf_req.sz;
 					enc_param.encode =
 					VIDC_1080P_ENC_TYPE_LAST_FRAME_DATA;
-<<<<<<< HEAD
-				ddl->cmd_state = DDL_CMD_ENCODE_FRAME;
-				ddl_context->vidc_encode_frame_start
-				[ddl->command_channel]
-					(&enc_param);
-			} else {
-				DDL_MSG_LOW("ddl_state_transition: %s ~~> \
-					DDL_CLIENT_WAIT_FOR_FRAME",
-=======
 					ddl->cmd_state = DDL_CMD_ENCODE_FRAME;
 					ddl_context->vidc_encode_frame_start
 						[ddl->command_channel]
 						(&enc_param);
-				} } else {
+				} else {
 				DDL_MSG_LOW("ddl_state_transition: %s ~~>"
 					"DDL_CLIENT_WAIT_FOR_FRAME",
->>>>>>> a3677e5... vidc: venc: Add Bframe support
 					ddl_get_state_string(
 					ddl->client_state));
 				ddl->client_state =
@@ -724,14 +714,6 @@ static void ddl_encoder_eos_done(struct ddl_context *ddl_context)
 	vidc_1080p_clear_returned_channel_inst_id();
 	ddl = ddl_get_current_ddl_client_for_channel_id(ddl_context,
 			ddl_context->response_cmd_ch_id);
-<<<<<<< HEAD
-	if (ddl) {
-		if (DDLCLIENT_STATE_IS(ddl, DDL_CLIENT_WAIT_FOR_EOS_DONE)) {
-			DDL_MSG_LOW("ENC_EOS_DONE");
-			ddl->cmd_state = DDL_CMD_INVALID;
-			DDL_MSG_LOW("ddl_state_transition: %s ~~> \
-				DDL_CLIENT_WAIT_FOR_FRAME",
-=======
 	if (!ddl || (!DDLCLIENT_STATE_IS(ddl, DDL_CLIENT_WAIT_FOR_EOS_DONE))) {
 		DDL_MSG_ERROR("STATE-CRITICAL-EOSFRMDONE");
 		ddl_client_fatal_cb(ddl);
@@ -743,7 +725,6 @@ static void ddl_encoder_eos_done(struct ddl_context *ddl_context)
 		ddl->cmd_state = DDL_CMD_INVALID;
 		DDL_MSG_LOW("ddl_state_transition: %s ~~>"
 				"DDL_CLIENT_WAIT_FOR_FRAME",
->>>>>>> a3677e5... vidc: venc: Add Bframe support
 				ddl_get_state_string(ddl->client_state));
 		ddl->client_state = DDL_CLIENT_WAIT_FOR_FRAME;
 		DDL_MSG_LOW("eos_done");
