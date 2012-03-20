@@ -296,7 +296,7 @@ static int _genlock_lock(struct genlock *lock, struct genlock_handle *handle,
 {
 	unsigned long irqflags;
 	int ret = 0;
-	unsigned int ticks = msecs_to_jiffies(timeout);
+	unsigned long ticks = msecs_to_jiffies(timeout);
 
 	spin_lock_irqsave(&lock->lock, irqflags);
 
@@ -367,7 +367,7 @@ static int _genlock_lock(struct genlock *lock, struct genlock_handle *handle,
 	/* Wait while the lock remains in an incompatible state */
 
 	while (lock->state != _UNLOCKED) {
-		unsigned int elapsed;
+		signed long elapsed;
 
 		spin_unlock_irqrestore(&lock->lock, irqflags);
 
@@ -381,7 +381,7 @@ static int _genlock_lock(struct genlock *lock, struct genlock_handle *handle,
 			goto done;
 		}
 
-		ticks = elapsed;
+		ticks = (unsigned long) elapsed;
 	}
 
 dolock:
@@ -455,7 +455,7 @@ int genlock_wait(struct genlock_handle *handle, uint32_t timeout)
 	struct genlock *lock;
 	unsigned long irqflags;
 	int ret = 0;
-	unsigned int ticks = msecs_to_jiffies(timeout);
+	unsigned long ticks = msecs_to_jiffies(timeout);
 
 	if (IS_ERR_OR_NULL(handle)) {
 		GENLOCK_LOG_ERR("Invalid handle\n");
@@ -482,7 +482,7 @@ int genlock_wait(struct genlock_handle *handle, uint32_t timeout)
 	}
 
 	while (lock->state != _UNLOCKED) {
-		unsigned int elapsed;
+		signed long elapsed;
 
 		spin_unlock_irqrestore(&lock->lock, irqflags);
 
@@ -496,7 +496,7 @@ int genlock_wait(struct genlock_handle *handle, uint32_t timeout)
 			break;
 		}
 
-		ticks = elapsed;
+		ticks = (unsigned long) elapsed;
 	}
 
 done:
