@@ -47,6 +47,7 @@
 uint32 mdp4_extn_disp;
 static struct clk *mdp_clk;
 static struct clk *mdp_pclk;
+int mdp_rev;
 
 struct completion mdp_ppp_comp;
 struct semaphore mdp_ppp_mutex;
