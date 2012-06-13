@@ -442,8 +442,8 @@ static u32 vid_enc_get_next_msg(struct video_client_ctx *client_ctx,
 
 static u32 vid_enc_close_client(struct video_client_ctx *client_ctx)
 {
+	struct vid_enc_msg *vid_enc_msg = NULL;
 	u32 vcd_status;
-
 	int rc;
 
 	INFO("\n msm_vidc_enc: Inside %s()", __func__);
@@ -472,6 +472,15 @@ static u32 vid_enc_close_client(struct video_client_ctx *client_ctx)
 		}
 	}
 	DBG("VCD_STOPPED: After Timeout, calling VCD_CLOSE\n");
+	mutex_lock(&client_ctx->msg_queue_lock);
+	while (!list_empty(&client_ctx->msg_queue)) {
+		DBG("%s(): Delete remaining entries\n", __func__);
+		vid_enc_msg = list_first_entry(&client_ctx->msg_queue,
+					struct vid_enc_msg, list);
+		list_del(&vid_enc_msg->list);
+		kfree(vid_enc_msg);
+	}
+	mutex_unlock(&client_ctx->msg_queue_lock);
 	vcd_status = vcd_close(client_ctx->vcd_handle);
 
 	if (vcd_status) {
@@ -929,6 +938,55 @@ static int vid_enc_ioctl(struct inode *inode, struct file *file,
 			ERR("setting VEN_IOCTL_CMD_RESUME failed\n");
 			return -EIO;
 		}
+		break;
+	}
+	case VEN_IOCTL_SET_RECON_BUFFER:
+	{
+		struct venc_recon_addr venc_recon;
+		if (copy_from_user(&venc_msg, arg, sizeof(venc_msg)))
+			return -EFAULT;
+		DBG("VEN_IOCTL_SET_RECON_BUFFER\n");
+		if (copy_from_user(&venc_recon, venc_msg.in,
+				sizeof(venc_recon)))
+				return -EFAULT;
+		result = vid_enc_set_recon_buffers(client_ctx,
+					&venc_recon);
+		if (!result) {
+			ERR("setting VEN_IOCTL_SET_RECON_BUFFER failed\n");
+			return -EIO;
+		}
+		break;
+	}
+	case VEN_IOCTL_FREE_RECON_BUFFER:
+	{
+		DBG("VEN_IOCTL_FREE_RECON_BUFFER\n");
+		result = vid_enc_free_recon_buffers(client_ctx);
+		if (!result) {
+			ERR("VEN_IOCTL_FREE_RECON_BUFFER failed\n");
+			return -EIO;
+		}
+		break;
+	}
+	case VEN_IOCTL_GET_RECON_BUFFER_SIZE:
+	{
+		struct venc_recon_buff_size venc_recon_size;
+		if (copy_from_user(&venc_msg, arg, sizeof(venc_msg)))
+			return -EFAULT;
+		DBG("VEN_IOCTL_GET_RECON_BUFFER_SIZE\n");
+		if (copy_from_user(&venc_recon_size, venc_msg.out,
+						   sizeof(venc_recon_size)))
+				return -EFAULT;
+		result = vid_enc_get_recon_buffer_size(client_ctx,
+					&venc_recon_size);
+		if (result) {
+				if (copy_to_user(venc_msg.out, &venc_recon_size,
+					sizeof(venc_recon_size)))
+					return -EFAULT;
+			} else {
+				ERR("setting VEN_IOCTL_GET_RECON_BUFFER_SIZE"
+					"failed\n");
+				return -EIO;
+			}
 		break;
 	}
 	case VEN_IOCTL_SET_QP_RANGE:

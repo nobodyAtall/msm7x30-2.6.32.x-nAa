@@ -374,7 +374,8 @@ static u32 vcd_flush_in_invalid(struct vcd_clnt_ctxt *cctxt,
 			cctxt->status.mask |= (mode & VCD_FLUSH_ALL);
 			vcd_send_flush_done(cctxt, VCD_S_SUCCESS);
 		}
-	}
+	} else
+		cctxt->status.mask |= (mode & VCD_FLUSH_ALL);
 	return rc;
 }
 
@@ -524,12 +525,17 @@ static u32 vcd_set_property_cmn
 			}
 			break;
 		}
-
+	case VCD_I_INTRA_PERIOD:
+	   {
+		  struct vcd_property_i_period *iperiod =
+			 (struct vcd_property_i_period *)prop_val;
+		  cctxt->bframe = iperiod->b_frames;
+		  break;
+	   }
 	default:
 		{
 			break;
 		}
-
 	}
 	return rc;
 }
@@ -696,24 +702,10 @@ static u32 vcd_fill_output_buffer_cmn
 	struct vcd_buffer_entry *buf_entry;
 	u32 result = true;
 	u32 handled = true;
-	if (!cctxt || !buffer) {
-		VCD_MSG_ERROR("%s(): Inavlid params cctxt %p buffer %p",
-					__func__, cctxt, buffer);
-		return VCD_ERR_BAD_POINTER;
-	}
+
 	VCD_MSG_LOW("vcd_fill_output_buffer_cmn in %d:",
 		    cctxt->clnt_state.state);
-	if (cctxt->status.mask & VCD_IN_RECONFIG) {
-		buffer->time_stamp = 0;
-		buffer->data_len = 0;
-		VCD_MSG_LOW("In reconfig: Return output buffer");
-		cctxt->callback(VCD_EVT_RESP_OUTPUT_DONE,
-			VCD_S_SUCCESS,
-			buffer,
-			sizeof(struct vcd_frame_data),
-			cctxt, cctxt->client_data);
-		return rc;
-	}
+
 	buf_entry = vcd_check_fill_output_buffer(cctxt, buffer);
 	if (!buf_entry)
 		return VCD_ERR_BAD_POINTER;
@@ -1102,6 +1094,9 @@ static void vcd_clnt_cb_in_flushing
 		if (frm_trans_end && !cctxt->status.frame_submitted) {
 			VCD_MSG_HIGH
 			    ("All pending frames recvd from DDL");
+			if (cctxt->status.mask & VCD_FLUSH_INPUT)
+				vcd_flush_bframe_buffers(cctxt,
+							VCD_FLUSH_INPUT);
 			if (cctxt->status.mask & VCD_FLUSH_OUTPUT)
 				vcd_flush_output_buffers(cctxt);
 			vcd_send_flush_done(cctxt, VCD_S_SUCCESS);
@@ -1210,18 +1205,18 @@ static void vcd_clnt_cb_in_stopping
 			frm_trans_end = true;
 		}
 		if (frm_trans_end && !cctxt->status.frame_submitted) {
-
 				VCD_MSG_HIGH
-				    ("All pending frames recvd from DDL");
+					("All pending frames recvd from DDL");
+				vcd_flush_bframe_buffers(cctxt,
+							VCD_FLUSH_INPUT);
 				vcd_flush_output_buffers(cctxt);
 				cctxt->status.mask &= ~VCD_FLUSH_ALL;
 				vcd_release_all_clnt_frm_transc(cctxt);
 				VCD_MSG_HIGH
-				    ("All buffers flushed. Enqueuing stop cmd");
+				("All buffers flushed. Enqueuing stop cmd");
 				vcd_client_cmd_flush_and_en_q(cctxt,
 						VCD_CMD_CODEC_STOP);
 		}
-
 	}
 }
 
