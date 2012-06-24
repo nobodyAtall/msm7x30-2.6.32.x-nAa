@@ -21,15 +21,8 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
 		.default_brightness = LED_FULL,
 	},
 	{
-		.name = "button-backlight-rgb1",
-		.sinks = BIT(AS3676_SINK_RGB1),
-		.flags = AS3676_FLAG_ALS,
-		.max_current = 25000,
-	},
-	{
-		.name = "button-backlight-rgb2",
-		.sinks = BIT(AS3676_SINK_RGB2),
-		.flags = AS3676_FLAG_ALS,
+		.name = "button-backlight",
+		.sinks = BIT(AS3676_SINK_RGB1) | BIT(AS3676_SINK_RGB2),
 		.max_current = 25000,
 	},
 	{
