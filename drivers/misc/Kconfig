@@ -17,11 +17,6 @@ config ANDROID_PMEM
 	bool "Android pmem allocator"
 	default y
 
-config ANDROID_PMEM_DEBUG
-	bool "Android pmem debug"
-	depends on ANDROID_PMEM
-	default n
-
 config ANDROID_PMEM_KAPI_TEST
 	tristate "Simple module to test Android pmem kernel API"
 	depends on ANDROID_PMEM
