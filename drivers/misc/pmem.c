@@ -1680,6 +1680,7 @@ static int pmem_mmap(struct file *file, struct vm_area_struct *vma)
 	down_write(&data->sem);
 	/* check this file isn't already mmaped, for submaps check this file
 	 * has never been mmaped */
+#if 0
 	if ((data->flags & PMEM_FLAGS_SUBMAP) ||
 	    (data->flags & PMEM_FLAGS_UNSUBMAP)) {
 #if PMEM_DEBUG
@@ -1689,6 +1690,7 @@ static int pmem_mmap(struct file *file, struct vm_area_struct *vma)
 		ret = -EINVAL;
 		goto error;
 	}
+#endif
 	/* if file->private_data == unalloced, alloc*/
 	if (data->index == -1) {
 		mutex_lock(&pmem[id].arena_mutex);
