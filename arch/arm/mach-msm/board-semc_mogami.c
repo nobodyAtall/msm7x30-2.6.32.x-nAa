@@ -195,7 +195,6 @@
 #endif /* CONFIG_FB_MSM_HDMI_SII9024A_PANEL */
 #endif /*CONFIG_FB_MSM_TRIPLE_BUFFER*/
 
-#define MSM_GPU_PHYS_SIZE       SZ_4M
 #define MSM_PMEM_CAMERA_SIZE    0x0000000
 #define MSM_PMEM_ADSP_SIZE      0x2F00000
 #define PMEM_KERNEL_EBI1_SIZE   0x600000
@@ -4490,14 +4489,6 @@ static void __init fb_size_setup(char **p)
 
 __early_param("fb_size=", fb_size_setup);
 
-static unsigned gpu_phys_size = MSM_GPU_PHYS_SIZE;
-static void __init gpu_phys_size_setup(char **p)
-{
-	gpu_phys_size = memparse(*p, p);
-}
-
-__early_param("gpu_phys_size=", gpu_phys_size_setup);
-
 static unsigned pmem_adsp_size = MSM_PMEM_ADSP_SIZE;
 static void __init pmem_adsp_size_setup(char **p)
 {
@@ -4543,19 +4534,7 @@ static void __init msm7x30_allocate_memory_regions(void)
 	pr_info("allocating %lu bytes at %p (%lx physical) for fb\n",
 		size, addr, __pa(addr));
 
-/*
-	size = gpu_phys_size;
-	if (size) {
-		addr = alloc_bootmem(size);
-		kgsl_resources[1].start = __pa(addr);
-		kgsl_resources[1].end = kgsl_resources[1].start + size - 1;
-		pr_info("allocating %lu bytes at %p (%lx physical) for "
-			"KGSL\n", size, addr, __pa(addr));
-	}
-*/
-
 	size = pmem_adsp_size;
-
 	if (size) {
 		addr = __alloc_bootmem(size, 8*1024, __pa(MAX_DMA_ADDRESS));
 		android_pmem_adsp_pdata.start = __pa(addr);
