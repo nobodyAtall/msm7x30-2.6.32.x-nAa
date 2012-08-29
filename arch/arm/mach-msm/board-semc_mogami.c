@@ -181,18 +181,16 @@
 
 #define MSM_PMEM_SF_SIZE	0x1700000
 
+#ifdef CONFIG_FB_MSM_HDMI_SII9024A_PANEL
+#define MSM_HDMI_SIZE           0x30000
+#else
+#define MSM_HDMI_SIZE           0
+#endif /* CONFIG_FB_MSM_HDMI_SII9024A_PANEL */
+
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
-#ifdef CONFIG_FB_MSM_HDMI_SII9024A_PANEL
-#define MSM_FB_SIZE             0xA60000
+#define MSM_FB_SIZE             (864 * 480 * 4 * 3) + MSM_HDMI_SIZE
 #else
-#define MSM_FB_SIZE		0xA00000
-#endif /* CONFIG_FB_MSM_HDMI_SII9024A_PANEL */
-#else
-#ifdef CONFIG_FB_MSM_HDMI_SII9024A_PANEL
-#define MSM_FB_SIZE             0x530000
-#else
-#define MSM_FB_SIZE		0x500000
-#endif /* CONFIG_FB_MSM_HDMI_SII9024A_PANEL */
+#define MSM_FB_SIZE             (864 * 480 * 4 * 2) + MSM_HDMI_SIZE
 #endif /*CONFIG_FB_MSM_TRIPLE_BUFFER*/
 
 #define MSM_PMEM_CAMERA_SIZE    0x0000000
