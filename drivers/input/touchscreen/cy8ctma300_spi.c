@@ -823,6 +823,12 @@ static void cy8ctma300_mt_handler(struct cy8ctma300_touch *tp, u8 *read_buf)
 	memset(&tp->track_detect[0], TP_FNGR_NOTRACK,
 						ARRAY_SIZE(tp->track_detect));
 
+	if (fdetect) {
+		input_report_key(tp->input, BTN_TOUCH, 1);
+	} else {
+		input_report_key(tp->input, BTN_TOUCH, 0);
+	}
+
 	for (i = 0; i < TP_TOUCH_CNT_MAX; i++) {
 		if (tp->track_state[i] == TP_TRACK_ACTIVE)
 			cy8ctma300_update_track(tp, i, cur_touch, fdetect);
