@@ -64,25 +64,14 @@ struct mdp4_overlay_ctrl {
 			.pipe_ndx = 2,
 		},
 		{
-			.pipe_type = OVERLAY_TYPE_RGB, /* shared */
+			.pipe_type = OVERLAY_TYPE_VIDEO, /* shared */
 			.pipe_num = OVERLAY_PIPE_VG1,
 			.pipe_ndx = 3,
-			.pipe_used = 1,	/* mark used to NOT shared */
 		},
 		{
-			.pipe_type = OVERLAY_TYPE_RGB, /* shared */
+			.pipe_type = OVERLAY_TYPE_VIDEO, /* shared */
 			.pipe_num = OVERLAY_PIPE_VG2,
 			.pipe_ndx = 4,
-		},
-		{
-			.pipe_type = OVERLAY_TYPE_VIDEO, /* shared */
-			.pipe_num = OVERLAY_PIPE_VG1,
-			.pipe_ndx = 5,
-		},
-		{
-			.pipe_type = OVERLAY_TYPE_VIDEO, /* shared */
-			.pipe_num = OVERLAY_PIPE_VG2,
-			.pipe_ndx = 6,
 		}
 	}
 };
