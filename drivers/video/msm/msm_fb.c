@@ -973,16 +973,16 @@ static int msm_fb_register(struct msm_fb_data_type *mfd)
 		fix->xpanstep = 1;
 		fix->ypanstep = 1;
 		var->vmode = FB_VMODE_NONINTERLACED;
-		var->blue.offset = 24;
-		var->green.offset = 16;
-		var->red.offset = 8;
+		var->blue.offset = 0;
+		var->green.offset = 8;
+		var->red.offset = 16;
 		var->blue.length = 8;
 		var->green.length = 8;
 		var->red.length = 8;
 		var->blue.msb_right = 0;
 		var->green.msb_right = 0;
 		var->red.msb_right = 0;
-		var->transp.offset = 0;
+		var->transp.offset = 24;
 		var->transp.length = 8;
 		bpp = 4;
 		break;
@@ -992,16 +992,16 @@ static int msm_fb_register(struct msm_fb_data_type *mfd)
 		fix->xpanstep = 1;
 		fix->ypanstep = 1;
 		var->vmode = FB_VMODE_NONINTERLACED;
-		var->blue.offset = 16;
-		var->green.offset = 8;
-		var->red.offset = 0;
+		var->blue.offset = 8;
+		var->green.offset = 16;
+		var->red.offset = 24;
 		var->blue.length = 8;
 		var->green.length = 8;
 		var->red.length = 8;
 		var->blue.msb_right = 0;
 		var->green.msb_right = 0;
 		var->red.msb_right = 0;
-		var->transp.offset = 24;
+		var->transp.offset = 0;
 		var->transp.length = 8;
 		bpp = 4;
 		break;
@@ -1081,24 +1081,31 @@ static int msm_fb_register(struct msm_fb_data_type *mfd)
 	var->xres = panel_info->xres;
 	var->yres = panel_info->yres;
 	var->xres_virtual = panel_info->xres;
-	var->yres_virtual = panel_info->yres * mfd->fb_page;
+	var->yres_virtual = panel_info->yres * mfd->fb_page +
+		((PAGE_SIZE - remainder)/fix->line_length) * mfd->fb_page;
 	var->bits_per_pixel = bpp * 8;	/* FrameBuffer color depth */
 	if (mfd->dest == DISPLAY_LCD) {
 		if (panel_info->type == MDDI_PANEL && panel_info->mddi.is_type1)
-			var->reserved[4] = panel_info->lcd.refx100 / (100 * 2);
+			var->reserved[3] = panel_info->lcd.refx100 / (100 * 2);
 		else
-			var->reserved[4] = panel_info->lcd.refx100 / 100;
+			var->reserved[3] = panel_info->lcd.refx100 / 100;
 	} else {
-		var->reserved[4] = panel_info->clk_rate /
-			((panel_info->lcdc.h_back_porch +
-			  panel_info->lcdc.h_front_porch +
-			  panel_info->lcdc.h_pulse_width +
-			  panel_info->xres) *
-			 (panel_info->lcdc.v_back_porch +
-			  panel_info->lcdc.v_front_porch +
-			  panel_info->lcdc.v_pulse_width +
-			  panel_info->yres));
+		if (panel_info->type == MIPI_VIDEO_PANEL) {
+			var->reserved[3] = panel_info->mipi.frame_rate;
+		} else {
+			var->reserved[3] = panel_info->clk_rate /
+				((panel_info->lcdc.h_back_porch +
+				  panel_info->lcdc.h_front_porch +
+				  panel_info->lcdc.h_pulse_width +
+				  panel_info->xres) *
+				 (panel_info->lcdc.v_back_porch +
+				  panel_info->lcdc.v_front_porch +
+				  panel_info->lcdc.v_pulse_width +
+				  panel_info->yres));
+		}
 	}
+	pr_debug("reserved[3] %u\n", var->reserved[3]);
+
 		/*
 		 * id field for fb app
 		 */
@@ -1545,14 +1552,14 @@ static int msm_fb_check_var(struct fb_var_screeninfo *var, struct fb_info *info)
 		   and verify the position of the RGB components */
 
 		if (var->transp.offset == 24) {
-			if ((var->blue.offset != 16) ||
+			if ((var->blue.offset != 0) ||
 			    (var->green.offset != 8) ||
-			    (var->red.offset != 0))
+			    (var->red.offset != 16))
 				return -EINVAL;
 		} else if (var->transp.offset == 0) {
-			if ((var->blue.offset != 24) ||
+			if ((var->blue.offset != 8) ||
 			    (var->green.offset != 16) ||
-			    (var->red.offset != 8))
+			    (var->red.offset != 24))
 				return -EINVAL;
 		} else
 			return -EINVAL;
@@ -1642,7 +1649,7 @@ static int msm_fb_set_par(struct fb_info *info)
 		break;
 
 	case 32:
-		if (var->transp.offset == 0)
+		if (var->transp.offset == 24)
 			mfd->fb_imgType = MDP_ARGB_8888;
 		else
 			mfd->fb_imgType = MDP_RGBA_8888;
