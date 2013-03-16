@@ -39,8 +39,10 @@
 #include "smd_rpcrouter.h"
 
 enum buf_state_type {
+#ifndef CONFIG_SLQB
 	FREE = 0,
-	FULL,
+#endif
+	FULL = 1,
 	DATA_READY,
 };
 
