@@ -77,7 +77,9 @@ KBUILD_CFLAGS = $(subst -pg, , $(ORIG_CFLAGS))
 endif
 
 EXTRA_CFLAGS  := -fpic -fno-builtin
-EXTRA_AFLAGS  := -Wa,-march=all
+EXTRA_AFLAGS := -Wa,-march=armv7-a -mfpu=neon
+#plus_sec := $(call as-instr,.arch_extension sec,+sec)
+#EXTRA_AFLAGS := -Wa,-march=armv7-a$(plus_sec)
 
 # Supply ZRELADDR, INITRD_PHYS and PARAMS_PHYS to the decompressor via
 # linker symbols.  We only define initrd_phys and params_phys if the
@@ -109,7 +111,8 @@ $(obj)/lib1funcs.S: $(srctree)/arch/$(SRCARCH)/lib/lib1funcs.S FORCE
 
 # Don't allow any static data in misc.o, which
 # would otherwise mess up our GOT table
-CFLAGS_misc.o := -Dstatic=
+CFLAGS_misc.o := -Wa,-march=armv7-a -mfpu=neon -Dstatic=
+#CFLAGS_misc.o := -Wa,-march=armv7-a$(plus_sec) -mfpu=neon -Dstatic=
 
 $(obj)/vmlinux: $(obj)/vmlinux.lds $(obj)/$(HEAD) $(obj)/piggy.$(suffix_y).o \
 	 	$(addprefix $(obj)/, $(OBJS)) $(lib1funcs) FORCE
