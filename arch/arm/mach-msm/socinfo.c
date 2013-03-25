@@ -427,7 +427,8 @@ int __init socinfo_init(void)
 		return -EIO;
 	}
 
-	WARN(!socinfo_get_id(), "Unknown SOC ID!\n");
+	if (!socinfo_get_id())
+		pr_err("%s: Unknown SOC ID!\n", __func__);
 	WARN(socinfo_get_id() >= ARRAY_SIZE(cpu_of_id),
 		"New IDs added! ID => CPU mapping might need an update.\n");
 
