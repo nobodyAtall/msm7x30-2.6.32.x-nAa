@@ -1,29 +1,29 @@
 /*
-* drivers/cpufreq/cpufreq_savagedzen.c
-*
-* Copyright (C) 2010 Google, Inc.
-*
-* This software is licensed under the terms of the GNU General Public
-* License version 2, as published by the Free Software Foundation, and
-* may be copied, distributed, and modified under those terms.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* Author: Joshua Seidel
+ * drivers/cpufreq/cpufreq_savagedzen.c
+ *
+ * Copyright (C) 2010 Google, Inc.
+ *
+ * This software is licensed under the terms of the GNU General Public
+ * License version 2, as published by the Free Software Foundation, and
+ * may be copied, distributed, and modified under those terms.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * Author: Joshua Seidel
 
-* Based on the smartass governor by Erasmux
-*
-* Based on the interactive governor By Mike Chan (mike@android.com)
-* which was adaptated to 2.6.29 kernel by Nadlabak (pavel@doshaska.net)
-*
-* requires to add
-* EXPORT_SYMBOL_GPL(nr_running);
-* at the end of kernel/sched.c
-*
-*/
+ * Based on the smartass governor by Erasmux
+ *
+ * Based on the interactive governor By Mike Chan (mike@android.com)
+ * which was adaptated to 2.6.29 kernel by Nadlabak (pavel@doshaska.net)
+ *
+ * requires to add
+ * EXPORT_SYMBOL_GPL(nr_running);
+ * at the end of kernel/sched.c
+ *
+ */
 
 #include <linux/cpu.h>
 #include <linux/cpumask.h>
@@ -68,82 +68,82 @@ enum {
 };
 
 /*
-* Combination of the above debug flags.
-*/
+ * Combination of the above debug flags.
+ */
 static unsigned long debug_mask;
 
 /*
-* The minimum amount of time to spend at a frequency before we can ramp up.
-*/
+ * The minimum amount of time to spend at a frequency before we can ramp up.
+ */
 #define DEFAULT_UP_RATE_US 12000;
 static unsigned long up_rate_us;
 
 /*
-* The minimum amount of time to spend at a frequency before we can ramp down.
-*/
+ * The minimum amount of time to spend at a frequency before we can ramp down.
+ */
 #define DEFAULT_DOWN_RATE_US 24000;
 static unsigned long down_rate_us;
 
 /*
-* When ramping up frequency with no idle cycles jump to at least this frequency.
-* Zero disables. Set a very high value to jump to policy max freqeuncy.
-*/
+ * When ramping up frequency with no idle cycles jump to at least this frequency.
+ * Zero disables. Set a very high value to jump to policy max freqeuncy.
+ */
 #define DEFAULT_UP_MIN_FREQ 0
 static unsigned int up_min_freq;
 
 /*
-* When sleep_max_freq>0 the frequency when suspended will be capped
-* by this frequency. Also will wake up at max frequency of policy
-* to minimize wakeup issues.
-* Set sleep_max_freq=0 to disable this behavior.
-*/
+ * When sleep_max_freq>0 the frequency when suspended will be capped
+ * by this frequency. Also will wake up at max frequency of policy
+ * to minimize wakeup issues.
+ * Set sleep_max_freq=0 to disable this behavior.
+ */
 #define DEFAULT_SLEEP_MAX_FREQ 245760
 static unsigned int sleep_max_freq;
 
 /*
-* The frequency to set when waking up from sleep.
-* When sleep_max_freq=0 this will have no effect.
-*/
+ * The frequency to set when waking up from sleep.
+ * When sleep_max_freq=0 this will have no effect.
+ */
 #define DEFAULT_SLEEP_WAKEUP_FREQ 1024000
 static unsigned int sleep_wakeup_freq;
 
 /*
-* When awake_min_freq>0 the frequency when not suspended will not
-* go below this frequency.
-* Set awake_min_freq=0 to disable this behavior.
-*/
+ * When awake_min_freq>0 the frequency when not suspended will not
+ * go below this frequency.
+ * Set awake_min_freq=0 to disable this behavior.
+ */
 #define DEFAULT_AWAKE_MIN_FREQ 0
 static unsigned int awake_min_freq;
 
 /*
-* Sampling rate, I highly recommend to leave it at 2.
-*/
+ * Sampling rate, I highly recommend to leave it at 2.
+ */
 #define DEFAULT_SAMPLE_RATE_JIFFIES 2
 static unsigned int sample_rate_jiffies;
 
 /*
-* Freqeuncy delta when ramping up.
-* zero disables and causes to always jump straight to max frequency.
-*/
+ * Freqeuncy delta when ramping up.
+ * zero disables and causes to always jump straight to max frequency.
+ */
 #define DEFAULT_RAMP_UP_STEP 245000
 static unsigned int ramp_up_step;
 
 /*
-* Freqeuncy delta when ramping down.
-* zero disables and will calculate ramp down according to load heuristic.
-*/
+ * Freqeuncy delta when ramping down.
+ * zero disables and will calculate ramp down according to load heuristic.
+ */
 #define DEFAULT_RAMP_DOWN_STEP 0
 static unsigned int ramp_down_step;
 
 /*
-* CPU freq will be increased if measured load > max_cpu_load;
-*/
+ * CPU freq will be increased if measured load > max_cpu_load;
+ */
 #define DEFAULT_MAX_CPU_LOAD 65
 static unsigned long max_cpu_load;
 
 /*
-* CPU freq will be decreased if measured load < min_cpu_load;
-*/
+ * CPU freq will be decreased if measured load < min_cpu_load;
+ */
 #define DEFAULT_MIN_CPU_LOAD 50
 static unsigned long min_cpu_load;
 
@@ -241,12 +241,12 @@ static void cpufreq_savagedzen_timer(unsigned long data)
         }
 
         /*
-* There is a window where if the cpu utlization can go from low to high
-* between the timer expiring, delta_idle will be > 0 and the cpu will
-* be 100% busy, preventing idle from running, and this timer from
-* firing. So setup another timer to fire to check cpu utlization.
-* Do not setup the timer if there is no scheduled work or if at max speed.
-*/
+         * There is a window where if the cpu utlization can go from low to high
+         * between the timer expiring, delta_idle will be > 0 and the cpu will
+         * be 100% busy, preventing idle from running, and this timer from
+         * firing. So setup another timer to fire to check cpu utlization.
+         * Do not setup the timer if there is no scheduled work or if at max speed.
+         */
         if (policy->cur < this_savagedzen->max_speed && !timer_pending(&this_savagedzen->timer) && nr_running() > 0)
                 reset_timer(data,this_savagedzen);
 
@@ -254,9 +254,9 @@ static void cpufreq_savagedzen_timer(unsigned long data)
                 return;
 
         /*
-* Do not scale down unless we have been at this frequency for the
-* minimum sample time.
-*/
+         * Do not scale down unless we have been at this frequency for the
+         * minimum sample time.
+         */
         if (cputime64_sub(update_time, this_savagedzen->freq_change_time) < down_rate_us)
                 return;
 
@@ -590,9 +590,9 @@ static int cpufreq_governor_savagedzen(struct cpufreq_policy *new_policy,
                         return -EINVAL;
 
                 /*
-* Do not register the idle hook and create sysfs
-* entries if we have already done so.
-*/
+                 * Do not register the idle hook and create sysfs
+                 * entries if we have already done so.
+                 */
                 if (atomic_inc_return(&active_count) <= 1) {
                         rc = sysfs_create_group(&new_policy->kobj, &savagedzen_attr_group);
                         if (rc)

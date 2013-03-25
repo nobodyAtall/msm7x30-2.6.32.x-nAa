@@ -1,27 +1,27 @@
 /*
-* drivers/cpufreq/cpufreq_virtuous.c
-*
-* Copyright (C) 2010 Google, Inc.
-*
-* This software is licensed under the terms of the GNU General Public
-* License version 2, as published by the Free Software Foundation, and
-* may be copied, distributed, and modified under those terms.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* Author: Erasmux
-*
-* Based on the interactive governor By Mike Chan (mike@android.com)
-* which was adaptated to 2.6.29 kernel by Nadlabak (pavel@doshaska.net)
-*
-* requires to add
-* EXPORT_SYMBOL_GPL(nr_running);
-* at the end of kernel/sched.c
-*
-*/
+ * drivers/cpufreq/cpufreq_virtuous.c
+ *
+ * Copyright (C) 2010 Google, Inc.
+ *
+ * This software is licensed under the terms of the GNU General Public
+ * License version 2, as published by the Free Software Foundation, and
+ * may be copied, distributed, and modified under those terms.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * Author: Erasmux
+ *
+ * Based on the interactive governor By Mike Chan (mike@android.com)
+ * which was adaptated to 2.6.29 kernel by Nadlabak (pavel@doshaska.net)
+ * 
+ * requires to add
+ * EXPORT_SYMBOL_GPL(nr_running);
+ * at the end of kernel/sched.c
+ *
+ */
 
 #include <linux/cpu.h>
 #include <linux/cpumask.h>
@@ -59,56 +59,56 @@ static cpumask_t work_cpumask;
 static unsigned int suspended;
 
 /*
-* The minimum amount of time to spend at a frequency before we can ramp down,
-* default is 45ms.
-*/
+ * The minimum amount of time to spend at a frequency before we can ramp down,
+ * default is 45ms.
+ */
 #define DEFAULT_DOWN_RATE_US 20000
 static unsigned long down_rate_us;
 
 /*
-* When ramping up frequency with no idle cycles jump to at least this frequency.
-* Zero disables. Set a very high value to jump to policy max freqeuncy.
-*/
+ * When ramping up frequency with no idle cycles jump to at least this frequency.
+ * Zero disables. Set a very high value to jump to policy max freqeuncy.
+ */
 #define DEFAULT_UP_MIN_FREQ 998400
 static unsigned int up_min_freq;
 
 /*
-* When sleep_max_freq>0 the frequency when suspended will be capped
-* by this frequency. Also will wake up at max frequency of policy
-* to minimize wakeup issues.
-* Set sleep_max_freq=0 to disable this behavior.
-*/
+ * When sleep_max_freq>0 the frequency when suspended will be capped
+ * by this frequency. Also will wake up at max frequency of policy
+ * to minimize wakeup issues.
+ * Set sleep_max_freq=0 to disable this behavior.
+ */
 #define DEFAULT_SLEEP_MAX_FREQ 245000
 static unsigned int sleep_max_freq;
 
 /*
-* Sampling rate, I highly recommend to leave it at 2.
-*/
+ * Sampling rate, I highly recommend to leave it at 2.
+ */
 #define DEFAULT_SAMPLE_RATE_JIFFIES 2
 static unsigned int sample_rate_jiffies;
 
 /*
-* Freqeuncy delta when ramping up.
-* zero disables causes to always jump straight to max frequency.
-*/
+ * Freqeuncy delta when ramping up.
+ * zero disables causes to always jump straight to max frequency.
+ */
 #define DEFAULT_RAMP_UP_STEP 614400
 static unsigned int ramp_up_step;
 
 /*
-* Max freqeuncy delta when ramping down. zero disables.
-*/
+ * Max freqeuncy delta when ramping down. zero disables.
+ */
 #define DEFAULT_MAX_RAMP_DOWN 384000
 static unsigned int max_ramp_down;
 
 /*
-* CPU freq will be increased if measured load > max_cpu_load;
-*/
+ * CPU freq will be increased if measured load > max_cpu_load;
+ */
 #define DEFAULT_MAX_CPU_LOAD 70
 static unsigned long max_cpu_load;
 
 /*
-* CPU freq will be decreased if measured load < min_cpu_load;
-*/
+ * CPU freq will be decreased if measured load < min_cpu_load;
+ */
 #define DEFAULT_MIN_CPU_LOAD 35
 static unsigned long min_cpu_load;
 
@@ -157,13 +157,13 @@ static void cpufreq_virtuous_timer(unsigned long data)
         }
 
         /*
-* There is a window where if the cpu utlization can go from low to high
-* between the timer expiring, delta_idle will be > 0 and the cpu will
-* be 100% busy, preventing idle from running, and this timer from
-* firing. So setup another timer to fire to check cpu utlization.
-* Do not setup the timer if there is no scheduled work.
-*/
-        if (!timer_pending(&this_virtuous->timer) && nr_running() > 0) {
+         * There is a window where if the cpu utlization can go from low to high
+         * between the timer expiring, delta_idle will be > 0 and the cpu will
+         * be 100% busy, preventing idle from running, and this timer from
+         * firing. So setup another timer to fire to check cpu utlization.
+         * Do not setup the timer if there is no scheduled work.
+         */
+        if (!timer_pending(&this_virtuous->timer) && nr_running() > 0) { 
                         this_virtuous->time_in_idle = get_cpu_idle_time_us(
                                         data, &this_virtuous->idle_exit_time);
                         mod_timer(&this_virtuous->timer, jiffies + sample_rate_jiffies);
@@ -173,9 +173,9 @@ static void cpufreq_virtuous_timer(unsigned long data)
                 return;
 
         /*
-* Do not scale down unless we have been at this frequency for the
-* minimum sample time.
-*/
+         * Do not scale down unless we have been at this frequency for the
+         * minimum sample time.
+         */
         if (cputime64_sub(update_time, freq_change_time) < down_rate_us)
                 return;
 
@@ -202,9 +202,9 @@ static void cpufreq_idle(void)
 }
 
 /*
-* Choose the cpu frequency based off the load. For now choose the minimum
-* frequency that will satisfy the load, which is not always the lower power.
-*/
+ * Choose the cpu frequency based off the load. For now choose the minimum
+ * frequency that will satisfy the load, which is not always the lower power.
+ */
 static unsigned int cpufreq_virtuous_calc_freq(unsigned int cpu, struct cpufreq_policy *policy)
 {
         unsigned int delta_time;
@@ -479,9 +479,9 @@ static int cpufreq_governor_virtuous(struct cpufreq_policy *new_policy,
                         break;
 
                 /*
-* Do not register the idle hook and create sysfs
-* entries if we have already done so.
-*/
+                 * Do not register the idle hook and create sysfs
+                 * entries if we have already done so.
+                 */
                 if (atomic_inc_return(&active_count) > 1)
                         return 0;
 
@@ -567,7 +567,7 @@ static struct early_suspend virtuous_power_suspend = {
 };
 
 static int __init cpufreq_virtuous_init(void)
-{
+{       
         unsigned int i;
         struct virtuous_info_s *this_virtuous;
         down_rate_us = DEFAULT_DOWN_RATE_US;
@@ -623,3 +623,5 @@ module_exit(cpufreq_virtuous_exit);
 MODULE_AUTHOR ("LeeDrOiD/Virtuous Dev Team");
 MODULE_DESCRIPTION ("'cpufreq_virtuous' - A smart cpufreq governor");
 MODULE_LICENSE ("GPL");
+
+

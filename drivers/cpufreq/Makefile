@@ -22,6 +22,14 @@ obj-$(CONFIG_CPU_FREQ_GOV_SMARTASSH3)	+= cpufreq_smartassH3.o
 obj-$(CONFIG_CPU_FREQ_GOV_BRAZILIANWAX)	+= cpufreq_brazilianwax.o
 obj-$(CONFIG_CPU_FREQ_GOV_INTELLIDEMAND) += cpufreq_intellidemand.o
 obj-$(CONFIG_CPU_FREQ_GOV_VIRTUOUS)	+= cpufreq_virtuous.o
+obj-$(CONFIG_CPU_FREQ_GOV_ONDEMANDX)	+= cpufreq_ondemandx.o
+obj-$(CONFIG_CPU_FREQ_GOV_LIONHEART)    += cpufreq_lionheart.o
+obj-$(CONFIG_CPU_FREQ_GOV_LULZACTIVE)	+= cpufreq_lulzactive.o
+obj-$(CONFIG_CPU_FREQ_GOV_LAZY)		+= cpufreq_lazy.o
+obj-$(CONFIG_CPU_FREQ_GOV_INTELLIDEMAND2)	+= cpufreq_intellidemand2.o
+obj-$(CONFIG_CPU_FREQ_GOV_BADASS)	+= cpufreq_badass.o
+obj-$(CONFIG_CPU_FREQ_GOV_SUPERBAD)	+= cpufreq_superbad.o
+obj-$(CONFIG_CPU_FREQ_GOV_DARKSIDE)	+= cpufreq_darkside.o
 
 obj-$(CONFIG_CPU_FREQ_GOV_SCREEN)	+= cpufreq_screen.o
 
