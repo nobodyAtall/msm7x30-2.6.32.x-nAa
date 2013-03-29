@@ -1330,9 +1330,7 @@ static struct as3676_platform_led as3676_pdata_leds[] = {
 	{
 		.name = "lcd-backlight",
 		.sinks = BIT(AS3676_SINK_01),
-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_PWM_INIT
-		| AS3676_FLAG_WAIT_RESUME
-			| AS3676_FLAG_DLS,
+		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
 		.max_current = 20000,
 		.default_brightness = LED_FULL,
 	},
