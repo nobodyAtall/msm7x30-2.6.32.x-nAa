@@ -15,7 +15,8 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
 	{
 		.name = "lcd-backlight",
 		.sinks = BIT(AS3676_SINK_01),
-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_WAIT_RESUME,
+		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT
+			| AS3676_FLAG_WAIT_RESUME,
 		.max_current = 25000,
 		.default_brightness = LED_FULL,
 	},
@@ -29,7 +30,6 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
 		.name = "keyboard-backlight",
 		.sinks = BIT(AS3676_SINK_30) | BIT(AS3676_SINK_31) |
 				BIT(AS3676_SINK_32) | BIT(AS3676_SINK_33),
-		.flags = AS3676_FLAG_ALS_GROUP2,
 		.max_current = 25000,
 	},
 	{
