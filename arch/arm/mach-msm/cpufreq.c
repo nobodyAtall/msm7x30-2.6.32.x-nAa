@@ -27,7 +27,7 @@
 #include <linux/cpumask.h>
 #include <linux/sched.h>
 #include <linux/suspend.h>
-#include <mach/socinfo.h>
+#include "socinfo.h"
 #include <mach/cpufreq.h>
 
 #include "acpuclock.h"
