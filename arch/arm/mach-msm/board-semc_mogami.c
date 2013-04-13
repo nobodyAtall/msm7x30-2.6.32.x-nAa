@@ -3592,6 +3592,8 @@ static struct platform_device *devices[] __initdata = {
 	&msm_device_ssbi6,
 	&msm_device_ssbi7,
 #endif
+	&android_pmem_device,
+	&msm_fb_device,
 #ifdef CONFIG_MSM_ROTATOR
 	&msm_rotator_device,
 #endif
