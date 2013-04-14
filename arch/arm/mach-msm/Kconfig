@@ -189,6 +189,7 @@ config MACH_SEMC_ANZU
 	depends on ARCH_MSM7X30
 	depends on !MSM_STACKED_MEMORY
 	select TI1271
+	select FB_MSM_HDPI
 	select SUPPORT_ALIEN_USB_CHARGER
 	default y
 	bool "SonyEricsson Anzu"
@@ -199,6 +200,7 @@ config MACH_SEMC_HALLON
 	depends on ARCH_MSM7X30
 	depends on !MSM_STACKED_MEMORY
 	select TI1271
+	select FB_MSM_HDPI
 	select SUPPORT_ALIEN_USB_CHARGER
 	default y
 	bool "SonyEricsson Hallon"
@@ -209,6 +211,7 @@ config MACH_SEMC_IYOKAN
 	depends on ARCH_MSM7X30
 	depends on !MSM_STACKED_MEMORY
 	select TI1271
+	select FB_MSM_HDPI
 	select SUPPORT_ALIEN_USB_CHARGER
 	default y
 	bool "SonyEricsson Iyokan"
@@ -219,6 +222,7 @@ config MACH_SEMC_URUSHI
 	depends on ARCH_MSM7X30
 	depends on !MSM_STACKED_MEMORY
 	select TI1271
+	select FB_MSM_HDPI
 	select SUPPORT_ALIEN_USB_CHARGER
 	default y
 	bool "SonyEricsson Urushi"
@@ -267,6 +271,7 @@ config MACH_SEMC_HAIDA
 	depends on ARCH_MSM7X30
 	depends on !MSM_STACKED_MEMORY
 	select TI1271
+	select FB_MSM_HDPI
 	select SUPPORT_ALIEN_USB_CHARGER
 	default y
 	bool "SonyEricsson Haida"

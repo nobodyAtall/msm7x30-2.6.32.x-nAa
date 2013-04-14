@@ -179,7 +179,11 @@
 #define MSM_RAM_CONSOLE_SIZE    (128 * SZ_1K)
 #endif
 
+#ifdef CONFIG_FB_MSM_HDPI
+#define MSM_PMEM_SF_SIZE	0x1800000
+#else
 #define MSM_PMEM_SF_SIZE	0x1600000
+#endif
 
 #ifdef CONFIG_FB_MSM_HDMI_SII9024A_PANEL
 #define MSM_HDMI_SIZE           0x30000
