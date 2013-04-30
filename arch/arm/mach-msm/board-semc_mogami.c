@@ -24,7 +24,9 @@
 #include <linux/delay.h>
 #include <linux/bootmem.h>
 #include <linux/io.h>
+#ifdef CONFIG_SPI_QSD
 #include <linux/spi/spi.h>
+#endif
 #include <linux/mfd/pmic8058.h>
 #include <linux/mfd/marimba.h>
 #include <linux/i2c.h>
@@ -70,7 +72,6 @@
 #include "devices.h"
 #include "timer.h"
 #include "socinfo.h"
-#include "cpufreq.h"
 #include "board-semc_mogami-keypad.h"
 #include "board-semc_mogami-gpio.h"
 #include <linux/usb/android.h>
@@ -142,9 +143,7 @@
 #ifdef CONFIG_TOUCHSCREEN_CLEARPAD
 #include <linux/clearpad.h>
 #endif
-#ifdef CONFIG_SEMC_MOGAMI_FELICA_SUPPORT
-#include <mach/semc_mogami_felica.h>
-#endif
+
 #include <linux/battery_chargalg.h>
 
 #define BQ24185_GPIO_IRQ		(31)
@@ -197,7 +196,6 @@
 #define MSM_FB_SIZE             (864 * 480 * 4 * 2) + MSM_HDMI_SIZE
 #endif /*CONFIG_FB_MSM_TRIPLE_BUFFER*/
 
-#define MSM_PMEM_CAMERA_SIZE    0x0000000
 #define MSM_PMEM_ADSP_SIZE      0x1C00000
 #define PMEM_KERNEL_EBI1_SIZE   0x600000
 
@@ -230,18 +228,6 @@
 #define D_ONESEG_DEVICE_PORT_RESET	38 /* tuner HW reset */
 #define D_ONESEG_DEVICE_PORT_POWER	39 /* tuner power suply reset */
 #endif /* CONFIG_SEMC_ONESEG_TUNER_PM */
-
-#ifdef CONFIG_SEMC_MOGAMI_IRDA
-#include <mach/semc_msm_irda.h>
-#define PM_GPIO_IRDA_M_RX   36
-#define PM_GPIO_IRDA_M_TX   35
-#define PM_GPIO_IRDA_RX1    32
-#define PM_GPIO_IRDA_RX2    33
-#define PM_GPIO_IRDA_RX3    34
-#define PM_GPIO_IRDA_TX1    20
-#define PM_GPIO_IRDA_TX2    21
-#define PM_GPIO_IRDA_TX3    22
-#endif
 
 /* Platform specific HW-ID GPIO mask */
 static const u8 hw_id_gpios[] = {150, 149, 148, 43};
@@ -489,131 +475,6 @@ static struct platform_device semc_rpc_handset_device = {
 		.platform_data = &semc_rpc_hs_data,
 	},
 };
-
-#ifdef CONFIG_SEMC_MOGAMI_IRDA
-static struct msm_gpio irda_uart[] = {
-	{ GPIO_CFG(85, 3, GPIO_CFG_INPUT,  GPIO_CFG_NO_PULL,
-			GPIO_CFG_2MA), "UART2DM_Rx" },
-	{ GPIO_CFG(87, 3, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL,
-			GPIO_CFG_2MA), "UART2DM_Tx" },
-};
-struct pm8058_gpio pm_irda_m_tx = {
-	.direction      = PM_GPIO_DIR_IN,
-	.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
-	.pull           = PM_GPIO_PULL_NO,
-	.vin_sel        = PM_GPIO_VIN_S3,
-	.out_strength   = PM_GPIO_STRENGTH_NO,
-	.function       = PM_GPIO_FUNC_NORMAL,
-};
-struct pm8058_gpio pm_irda_tx = {
-	.direction      = PM_GPIO_DIR_OUT,
-	.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
-	.pull           = PM_GPIO_PULL_NO,
-	.vin_sel        = PM_GPIO_VIN_L2,
-	.out_strength   = PM_GPIO_STRENGTH_MED,
-	.function       = PM_GPIO_FUNC_2,
-};
-struct pm8058_gpio pm_irda_m_rx = {
-	.direction      = PM_GPIO_DIR_OUT,
-	.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
-	.pull           = PM_GPIO_PULL_NO,
-	.vin_sel        = PM_GPIO_VIN_S3,
-	.out_strength   = PM_GPIO_STRENGTH_MED,
-	.function       = PM_GPIO_FUNC_2,
-};
-struct pm8058_gpio pm_irda_rx = {
-	.direction      = PM_GPIO_DIR_IN,
-	.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
-	.pull           = PM_GPIO_PULL_NO,
-	.vin_sel        = PM_GPIO_VIN_L2,
-	.out_strength   = PM_GPIO_STRENGTH_NO,
-	.function       = PM_GPIO_FUNC_NORMAL,
-};
-struct irda_pm_gpio_config {
-	int                gpio;
-	struct pm8058_gpio *param;
-};
-static struct irda_pm_gpio_config irda_pm_gpio[] = {
-	{PM_GPIO_IRDA_TX1, &pm_irda_tx},
-	{PM_GPIO_IRDA_TX3, &pm_irda_tx},
-	{PM_GPIO_IRDA_RX1, &pm_irda_rx},
-	{PM_GPIO_IRDA_RX3, &pm_irda_rx},
-	{PM_GPIO_IRDA_M_TX, &pm_irda_m_tx},
-	{PM_GPIO_IRDA_M_RX, &pm_irda_m_rx},
-};
-
-#define MSM_UART2DM_PHYS      0xA3200000
-#define PMIC_GPIO_IRDA        38
-struct pm8058_gpio g39irda_hig = {
-	.direction      = PM_GPIO_DIR_OUT,
-	.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
-	.output_value   = 1,
-	.pull           = PM_GPIO_PULL_NO,
-	.vin_sel        = PM_GPIO_VIN_L7,
-	.out_strength   = PM_GPIO_STRENGTH_MED,
-	.function       = PM_GPIO_FUNC_NORMAL,
-};
-struct pm8058_gpio g39irda_low = {
-	.direction      = PM_GPIO_DIR_OUT,
-	.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
-	.output_value   = 0,
-	.pull           = PM_GPIO_PULL_NO,
-	.vin_sel        = PM_GPIO_VIN_L7,
-	.out_strength   = PM_GPIO_STRENGTH_MED,
-	.function       = PM_GPIO_FUNC_NORMAL,
-};
-static int semc_mogami_irda_init(void);
-struct irda_platform_data irda_data = {
-	.gpio_pow       = PMIC_GPIO_IRDA,
-	.gpio_pwcfg_low = &g39irda_low,
-	.gpio_pwcfg_hig = &g39irda_hig,
-	.paddr_uartdm   = MSM_UART2DM_PHYS,
-	.irq_uartdm     = INT_UART2DM_IRQ,
-	.chan_uartdm_tx = DMOV_HSUART2_TX_CHAN,
-	.crci_uartdm_tx = DMOV_HSUART2_TX_CRCI,
-	.chan_uartdm_rx = DMOV_HSUART2_RX_CHAN,
-	.crci_uartdm_rx = DMOV_HSUART2_RX_CRCI,
-	.clk_str        = "uartdm_clk",
-	.clk_dev        = &msm_device_uart_dm2.dev,
-	.gpio_init      = semc_mogami_irda_init,
-};
-static struct platform_device irda_mogami_device = {
-	.name   = "semc-msm-irda",
-	.id = -1,
-	.dev = {
-		.platform_data = &irda_data,
-	},
-};
-
-static int semc_mogami_irda_init(void)
-{
-	unsigned int ret;
-	int i, len;
-
-	ret = 0;
-
-	/* Configure PM8058 GPIO*/
-	len = sizeof(irda_pm_gpio)/sizeof(struct irda_pm_gpio_config);
-	for (i = 0; i < len; i++) {
-		ret = pm8058_gpio_config(irda_pm_gpio[i].gpio,
-						irda_pm_gpio[i].param);
-		if (ret) {
-			pr_err("%s PM_GPIO_IRDA[%d] config failed\n",
-				 __func__, i);
-			return ret;
-		}
-	}
-
-	/* Configure MSM UART2DM GPIO*/
-	ret = msm_gpios_request_enable(irda_uart, ARRAY_SIZE(irda_uart));
-	if (ret) {
-		pr_err("%s enable uart2dm gpios failed\n", __func__);
-		return ret;
-	}
-
-	return 0;
-}
-#endif
 
 static int pm8058_gpios_init(void)
 {
@@ -1370,6 +1231,7 @@ static void __init msm7x30_init_marimba(void)
 	}
 }
 
+#ifdef CONFIG_MSM7KV2_AUDIO
 static struct resource msm_aictl_resources[] = {
 	{
 	 .name = "aictl",
@@ -1492,6 +1354,7 @@ struct platform_device msm_lpa_device = {
 		.platform_data = &lpa_pdata,
 		},
 };
+#endif /* CONFIG_MSM7KV2_AUDIO */
 
 #define DEC0_FORMAT ((1<<MSM_ADSP_CODEC_MP3)| \
 	(1<<MSM_ADSP_CODEC_AAC)|(1<<MSM_ADSP_CODEC_WMA)| \
@@ -3001,7 +2864,7 @@ static struct i2c_board_info mogami_qup_i2c_devices[] __initdata = {
 	},
 #endif
 };
-
+#ifdef CONFIG_SPI_QSD
 static struct spi_board_info spi_board_info[] __initdata = {
 #ifdef CONFIG_TOUCHSCREEN_CY8CTMA300_SPI
 	{
@@ -3026,7 +2889,7 @@ static struct spi_board_info spi_board_info[] __initdata = {
         },
 #endif /* CONFIG_TOUCHSCREEN_CYTTSP_SPI */
 };
-
+#endif
 static struct i2c_board_info msm_marimba_board_info[] = {
 	{
 	 I2C_BOARD_INFO("marimba", 0xc),
@@ -3176,6 +3039,7 @@ static void __init msm_qsd_spi_init(void)
 	qsd_device_spi.dev.platform_data = &qsd_spi_pdata;
 }
 
+#ifdef CONFIG_USB_MSM_OTG_72K
 static int hsusb_rpc_connect(int connect)
 {
 	if (connect)
@@ -3183,6 +3047,7 @@ static int hsusb_rpc_connect(int connect)
 	else
 		return msm_hsusb_rpc_close();
 }
+#endif
 
 static struct msm_hsusb_gadget_platform_data msm_gadget_pdata;
 
@@ -3341,12 +3206,6 @@ static struct android_pmem_platform_data android_pmem_adsp_pdata = {
 	.cached = 0,
 };
 
-static struct android_pmem_platform_data android_pmem_camera_pdata = {
-	.name = "pmem_camera",
-	.allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
-	.cached = 1,
-};
-
 static struct platform_device android_pmem_kernel_ebi1_device = {
 	.name = "android_pmem",
 	.id = 1,
@@ -3357,32 +3216,6 @@ static struct platform_device android_pmem_adsp_device = {
 	.name = "android_pmem",
 	.id = 2,
 	.dev = {.platform_data = &android_pmem_adsp_pdata},
-};
-
-static struct platform_device android_pmem_camera_device = {
-	.name = "android_pmem",
-	.id = 3,
-	.dev = {.platform_data = &android_pmem_camera_pdata},
-};
-
-struct kgsl_cpufreq_voter {
-	int idle;
-	struct msm_cpufreq_voter voter;
-};
-
-static int kgsl_cpufreq_vote(struct msm_cpufreq_voter *v)
-{
-	struct kgsl_cpufreq_voter *kv =
-			container_of(v, struct kgsl_cpufreq_voter, voter);
-
-	return kv->idle ? MSM_CPUFREQ_IDLE : MSM_CPUFREQ_ACTIVE;
-}
-
-static struct kgsl_cpufreq_voter kgsl_cpufreq_voter = {
-	.idle = 1,
-	.voter = {
-		.vote = kgsl_cpufreq_vote,
-	},
 };
 
 struct resource kgsl_3d0_resources[] = {
@@ -3410,7 +3243,7 @@ static struct kgsl_device_platform_data kgsl_3d0_pdata = {
 			},
 			{
 				.gpu_freq = 192000000,
-				.bus_freq = 152000000,
+				.bus_freq = 153000000,
 				.io_fraction = 33,
 			},
 			{
@@ -3751,14 +3584,22 @@ static struct platform_device *devices[] __initdata = {
 	&msm_device_smd,
 	&msm_device_dmov,
 	&msm_device_nand,
+#ifdef CONFIG_USB_MSM_OTG_72K
 	&msm_device_otg,
+#ifdef CONFIG_USB_GADGET
 	&msm_device_gadget_peripheral,
+#endif
+#endif
+#ifdef CONFIG_USB_ANDROID
 	&usb_mass_storage_device,
 	&rndis_device,
 	&android_usb_device,
+#endif
 	&qsd_device_spi,
+#ifdef CONFIG_I2C_SSBI
 	&msm_device_ssbi6,
 	&msm_device_ssbi7,
+#endif
 	&android_pmem_device,
 	&msm_fb_device,
 #ifdef CONFIG_MSM_ROTATOR
@@ -3770,15 +3611,16 @@ static struct platform_device *devices[] __initdata = {
 #endif /* CONFIG_FB_MSM_HDMI_SII9024A_PANEL */
 	&android_pmem_kernel_ebi1_device,
 	&android_pmem_adsp_device,
-	&android_pmem_camera_device,
 	&msm_device_i2c,
 	&msm_device_i2c_2,
 	&msm_device_uart_dm1,
 	&semc_rpc_handset_device,
+#ifdef CONFIG_MSM7KV2_AUDIO
 	&msm_aictl_device,
 	&msm_mi2s_device,
 	&msm_lpa_device,
 	&msm_aux_pcm_device,
+#endif
 	&msm_device_adspdec,
 	&qup_device_i2c,
 	&msm_kgsl_3d0,
@@ -3840,12 +3682,6 @@ static struct platform_device *devices[] __initdata = {
 #endif
 #ifdef CONFIG_SEMC_ONESEG_TUNER_PM
 	&oneseg_tunerpm_device,
-#endif
-#ifdef CONFIG_SEMC_MOGAMI_FELICA_SUPPORT
-	&semc_mogami_felica_device,
-#endif
-#ifdef CONFIG_SEMC_MOGAMI_IRDA
-	&irda_mogami_device,
 #endif
 };
 
@@ -3916,6 +3752,7 @@ static void __init msm_device_i2c_init(void)
 static struct msm_i2c_platform_data msm_i2c_2_pdata = {
 	.clk_freq = 100000,
 	.rmutex = 0,
+	.rsl_id = "D:I2C02000022",
 	.msm_i2c_config_gpio = msm_i2c_gpio_config,
 };
 
@@ -3947,6 +3784,7 @@ static void __init qup_device_i2c_init(void)
 	}
 }
 
+#ifdef CONFIG_I2C_SSBI
 static struct msm_ssbi_platform_data msm_i2c_ssbi6_pdata = {
 	.rsl_id = "D:PMIC_SSBI",
 	.controller_type = MSM_SBI_CTRL_SSBI2,
@@ -3956,6 +3794,7 @@ static struct msm_ssbi_platform_data msm_i2c_ssbi7_pdata = {
 	.rsl_id = "D:CODEC_SSBI",
 	.controller_type = MSM_SBI_CTRL_SSBI,
 };
+#endif
 
 static struct msm_acpu_clock_platform_data msm7x30_clock_data = {
 	.acpu_switch_time_us = 50,
@@ -4268,7 +4107,9 @@ static struct mmc_platform_data msm7x30_sdc3_data = {
 	.ocr_mask = MMC_VDD_20_21 | MMC_VDD_21_22,
 	.translate_vdd = wifi_setup_power,
 	.mmc_bus_width = MMC_CAP_4_BIT_DATA | MMC_CAP_POWER_OFF_CARD,
+#ifdef CONFIG_MMC_MSM_SDIO_SUPPORT
 	.sdiowakeup_irq = MSM_GPIO_TO_INT(118),
+#endif
 	.msmsdcc_fmin = 144000,
 	.msmsdcc_fmid = 24576000,
 	.msmsdcc_fmax = 49152000,
@@ -4309,6 +4150,7 @@ static void msm7x30_init_uart3(void)
 
 }
 
+/* TSIF begin */
 #if defined(CONFIG_TSIF) || defined(CONFIG_TSIF_MODULE)
 
 #define TSIF_B_SYNC      GPIO_CFG(37, 1, GPIO_CFG_INPUT, \
@@ -4324,6 +4166,7 @@ static const struct msm_gpio tsif_gpios[] = {
 	{ .gpio_cfg = TSIF_B_CLK,  .label =  "tsif_clk", },
 	{ .gpio_cfg = TSIF_B_EN,   .label =  "tsif_en", },
 	{ .gpio_cfg = TSIF_B_DATA, .label =  "tsif_data", },
+	{ .gpio_cfg = TSIF_B_SYNC, .label =  "tsif_sync", },
 };
 
 static struct msm_tsif_platform_data tsif_platform_data = {
@@ -4333,6 +4176,7 @@ static struct msm_tsif_platform_data tsif_platform_data = {
 	.tsif_ref_clk = "tsif_ref_clk",
 };
 #endif /* defined(CONFIG_TSIF) || defined(CONFIG_TSIF_MODULE) */
+/* TSIF end   */
 
 static struct msm_spm_platform_data msm_spm_data __initdata = {
 	.reg_base_addr = MSM_SAW_BASE,
@@ -4365,12 +4209,6 @@ static struct msm_spm_platform_data msm_spm_data __initdata = {
  */
 static void __init mogami_temp_fixups(void)
 {
-	/* Power up cameras, but keeps both in RST */
-#if 0
-	gpio_request(0, "maincam_rst");
-	gpio_set_value(0, 0);	/* MCAM_RST_N */
-	gpio_free(0);
-#endif
 
 	vreg_helper_off("gp3");	/* L0 */
 	vreg_helper_off("gp5");	/* L23 */
@@ -4434,6 +4272,7 @@ static void __init msm7x30_init(void)
 	msm_spm_init(&msm_spm_data, 1);
 	msm_acpu_clock_init(&msm7x30_clock_data);
 
+#ifdef CONFIG_USB_MSM_OTG_72K
 	hsusb_chg_set_supplicants(hsusb_chg_supplied_to,
 				  ARRAY_SIZE(hsusb_chg_supplied_to));
 	if (0 <= CONFIG_USB_HS_DRV_AMPLITUDE ||
@@ -4441,20 +4280,22 @@ static void __init msm7x30_init(void)
 		msm_otg_pdata.drv_ampl =
 			hs_drv_ampl_ratio[CONFIG_USB_HS_DRV_AMPLITUDE];
 	msm_device_otg.dev.platform_data = &msm_otg_pdata;
+#ifdef CONFIG_USB_GADGET
 	msm_otg_pdata.swfi_latency =
 	    msm_pm_data
 	    [MSM_PM_SLEEP_MODE_RAMP_DOWN_AND_WAIT_FOR_INTERRUPT].latency;
 	msm_device_gadget_peripheral.dev.platform_data = &msm_gadget_pdata;
-
+#endif
+#endif
 	msm_uart_dm1_pdata.wakeup_irq = gpio_to_irq(136);
 	msm_device_uart_dm1.dev.platform_data = &msm_uart_dm1_pdata;
 #if defined(CONFIG_TSIF) || defined(CONFIG_TSIF_MODULE)
 	msm_device_tsif.dev.platform_data = &tsif_platform_data;
 #endif
 	platform_add_devices(devices, ARRAY_SIZE(devices));
-
+#ifdef CONFIG_USB_EHCI_MSM
 	msm_add_host(0, &msm_usb_host_pdata);
-
+#endif
 	msm7x30_init_mmc();
 	msm_qsd_spi_init();
 
@@ -4485,8 +4326,6 @@ static void __init msm7x30_init(void)
 #endif /* CONFIG_TOUCHSCREEN_CY8CTMA300_SPI */
 	msm_init_pmic_vibrator();
 
-	msm_cpufreq_register_voter(&kgsl_cpufreq_voter.voter);
-
 	i2c_register_board_info(0, msm_i2c_board_info,
 				ARRAY_SIZE(msm_i2c_board_info));
 
@@ -4496,11 +4335,15 @@ static void __init msm7x30_init(void)
 	i2c_register_board_info(4 /* QUP ID */, mogami_qup_i2c_devices,
 			ARRAY_SIZE(mogami_qup_i2c_devices));
 
+#ifdef CONFIG_SPI_QSD
 	spi_register_board_info(spi_board_info,
 		ARRAY_SIZE(spi_board_info));
+#endif
 
+#ifdef CONFIG_I2C_SSBI
 	msm_device_ssbi6.dev.platform_data = &msm_i2c_ssbi6_pdata;
 	msm_device_ssbi7.dev.platform_data = &msm_i2c_ssbi7_pdata;
+#endif
 
 #if defined(CONFIG_FB_MSM_MDDI_SONY_HVGA_LCD) || \
 	defined(CONFIG_FB_MSM_MDDI_HITACHI_HVGA_LCD) || \
@@ -4536,14 +4379,6 @@ static void __init pmem_adsp_size_setup(char **p)
 
 __early_param("pmem_adsp_size=", pmem_adsp_size_setup);
 
-static unsigned pmem_camera_size = MSM_PMEM_CAMERA_SIZE;
-static void __init pmem_camera_size_setup(char **p)
-{
-	pmem_camera_size = memparse(*p, p);
-}
-
-__early_param("pmem_camera_size=", pmem_camera_size_setup);
-
 static unsigned pmem_kernel_ebi1_size = PMEM_KERNEL_EBI1_SIZE;
 static void __init pmem_kernel_ebi1_size_setup(char **p)
 {
@@ -4557,39 +4392,12 @@ static void __init msm7x30_allocate_memory_regions(void)
 	void *addr;
 	unsigned long size;
 
-	size = pmem_sf_size;
-	if (size) {
-		addr = alloc_bootmem(size);
-		android_pmem_pdata.start = __pa(addr);
-		android_pmem_pdata.size = size;
-		pr_info("allocating %lu bytes at %p (%lx physical) for sf "
-			"pmem arena\n", size, addr, __pa(addr));
-	}
-
 	size = fb_size ? : MSM_FB_SIZE;
 	addr = alloc_bootmem(size);
 	msm_fb_resources[0].start = __pa(addr);
 	msm_fb_resources[0].end = msm_fb_resources[0].start + size - 1;
 	pr_info("allocating %lu bytes at %p (%lx physical) for fb\n",
 		size, addr, __pa(addr));
-
-	size = pmem_adsp_size;
-	if (size) {
-		addr = __alloc_bootmem(size, 8*1024, __pa(MAX_DMA_ADDRESS));
-		android_pmem_adsp_pdata.start = __pa(addr);
-		android_pmem_adsp_pdata.size = size;
-		pr_info("allocating %lu bytes at %p (%lx physical) for adsp "
-			"pmem arena\n", size, addr, __pa(addr));
-	}
-
-	size = pmem_camera_size;
-	if (size) {
-		addr = alloc_bootmem(size);
-		android_pmem_camera_pdata.start = __pa(addr);
-		android_pmem_camera_pdata.size = size;
-		pr_info("allocating %lu bytes at %p (%lx physical) for camera "
-			"pmem arena\n", size, addr, __pa(addr));
-	}
 
 	size = pmem_kernel_ebi1_size;
 	if (size) {
@@ -4600,6 +4408,23 @@ static void __init msm7x30_allocate_memory_regions(void)
 			" ebi1 pmem arena\n", size, addr, __pa(addr));
 	}
 
+	size = pmem_sf_size;
+	if (size) {
+		addr = alloc_bootmem(size);
+		android_pmem_pdata.start = __pa(addr);
+		android_pmem_pdata.size = size;
+		pr_info("allocating %lu bytes at %p (%lx physical) for sf "
+			"pmem arena\n", size, addr, __pa(addr));
+	}
+
+	size = pmem_adsp_size;
+	if (size) {
+		addr = alloc_bootmem(size);
+		android_pmem_adsp_pdata.start = __pa(addr);
+		android_pmem_adsp_pdata.size = size;
+		pr_info("allocating %lu bytes at %p (%lx physical) for adsp "
+			"pmem arena\n", size, addr, __pa(addr));
+	}
 }
 
 static void __init msm7x30_map_io(void)
